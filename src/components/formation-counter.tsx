@@ -25,8 +25,8 @@ type Formation = (typeof FORMATIONS)[number];
 type FieldSize = "small" | "medium" | "large";
 
 const FIELD_SIZES: { value: FieldSize; label: string; width: string; icon: { w: number; h: number } }[] = [
-  { value: "small", label: "Small field", width: "sm:max-w-[40rem]", icon: { w: 10, h: 6.5 } },
-  { value: "medium", label: "Medium field", width: "sm:max-w-[56rem]", icon: { w: 15, h: 10 } },
+  { value: "small", label: "Small field", width: "sm:max-w-[40rem] lg:max-w-[60rem]", icon: { w: 10, h: 6.5 } },
+  { value: "medium", label: "Medium field", width: "sm:max-w-[56rem] lg:max-w-[76rem]", icon: { w: 15, h: 10 } },
   { value: "large", label: "Large field", width: "sm:max-w-none", icon: { w: 20, h: 13 } },
 ];
 
@@ -235,10 +235,7 @@ export default function FormationCounter() {
 
   const enemyPanel = (
     <label className="flex w-full max-w-sm flex-col gap-1.5" htmlFor={selectId}>
-      <span className="whitespace-nowrap text-sm font-medium text-red-700 dark:text-red-400">
-        Opponent&apos;s formation
-        <span className="hidden font-normal text-stone-400 sm:inline dark:text-stone-500"> (up/down keys)</span>
-      </span>
+      <span className="text-sm font-medium text-red-700 dark:text-red-400">Opponent&apos;s formation</span>
       <span className="relative block">
         <select
           id={selectId}
@@ -284,9 +281,9 @@ export default function FormationCounter() {
 
   return (
     <div
-      className={`mx-auto flex w-full flex-col gap-6 sm:gap-8 ${FIELD_SIZES.find((f) => f.value === size)?.width ?? ""}`}
+      className={`mx-auto grid w-full gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start ${FIELD_SIZES.find((f) => f.value === size)?.width ?? ""}`}
     >
-      <div className="flex w-full flex-col gap-3">
+      <div className="flex w-full min-w-0 flex-col gap-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-6">
           <div className="flex justify-start">
             {allyOnLeft ? allyPanel : enemyPanel}
@@ -349,41 +346,15 @@ export default function FormationCounter() {
         </figure>
       </div>
 
-      <section className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
-        <dl className="flex flex-col divide-y divide-stone-200 dark:divide-stone-800">
-          {matchups.map((m) => {
-            const edge = m.ours > m.theirs ? "up" : m.ours < m.theirs ? "down" : "even";
-            return (
-              <div
-                key={m.zone}
-                className={`flex items-baseline justify-between gap-4 px-2 py-3 transition-colors ${
-                  step && step.ally.includes(m.key) ? "rounded-md bg-yellow-100 dark:bg-yellow-950/60" : ""
-                }`}
-              >
-                <dt className="text-sm text-stone-700 dark:text-stone-300">
-                  {m.zone}
-                  <span className="block text-xs text-stone-500">{m.note}</span>
-                </dt>
-                <dd className="flex items-baseline gap-2 text-2xl font-semibold tabular-nums text-stone-900 dark:text-stone-50">
-                  <span className="text-blue-700 dark:text-blue-400">{m.ours}</span>
-                  <span className="text-base font-normal text-stone-400">v</span>
-                  <span className="text-red-600 dark:text-red-400">{m.theirs}</span>
-                  <span className="sr-only">
-                    {edge === "up" ? ", you outnumber them" : edge === "down" ? ", they outnumber you" : ", even"}
-                  </span>
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
-        <div className="order-first flex flex-col gap-3 sm:order-none">
+      <aside className="flex min-w-0 flex-col gap-6 sm:grid sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] sm:gap-10 lg:flex lg:flex-col lg:gap-6 lg:pt-1">
+        <div className="flex flex-col gap-3">
           <h1 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
             Why {counter} works against {enemy}
           </h1>
           <p
             key={`${enemy}-${page}`}
             aria-live="polite"
-            className="min-h-[5.5rem] max-w-[70ch] text-base leading-7 text-stone-700 lg:text-lg lg:leading-8 dark:text-stone-300"
+            className="min-h-[5.5rem] max-w-[70ch] text-base leading-7 text-stone-700 dark:text-stone-300"
           >
             {step ? step.text : why}
           </p>
@@ -412,9 +383,8 @@ export default function FormationCounter() {
                 />
               ))}
             </div>
-            <span className="text-sm tabular-nums text-stone-600 dark:text-stone-400">
+            <span className="whitespace-nowrap text-sm tabular-nums text-stone-600 dark:text-stone-400">
               {page === 0 ? "Overview" : `Step ${page} of ${steps.length}`}
-              <span className="hidden text-stone-400 sm:inline dark:text-stone-500"> (arrow keys)</span>
             </span>
             <button
               type="button"
@@ -426,8 +396,37 @@ export default function FormationCounter() {
               <Chevron direction="right" />
             </button>
           </div>
+          <p className="hidden text-xs text-stone-500 sm:block dark:text-stone-500">
+            Keyboard: left and right page the steps, up and down change the opponent.
+          </p>
         </div>
-      </section>
+        <dl className="flex flex-col divide-y divide-stone-200 dark:divide-stone-800">
+          {matchups.map((m) => {
+            const edge = m.ours > m.theirs ? "up" : m.ours < m.theirs ? "down" : "even";
+            return (
+              <div
+                key={m.zone}
+                className={`flex items-baseline justify-between gap-4 px-2 py-3 transition-colors ${
+                  step && step.ally.includes(m.key) ? "rounded-md bg-yellow-100 dark:bg-yellow-950/60" : ""
+                }`}
+              >
+                <dt className="text-sm text-stone-700 dark:text-stone-300">
+                  {m.zone}
+                  <span className="block text-xs text-stone-500">{m.note}</span>
+                </dt>
+                <dd className="flex items-baseline gap-2 text-2xl font-semibold tabular-nums text-stone-900 dark:text-stone-50">
+                  <span className="text-blue-700 dark:text-blue-400">{m.ours}</span>
+                  <span className="text-base font-normal text-stone-400">v</span>
+                  <span className="text-red-600 dark:text-red-400">{m.theirs}</span>
+                  <span className="sr-only">
+                    {edge === "up" ? ", you outnumber them" : edge === "down" ? ", they outnumber you" : ", even"}
+                  </span>
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </aside>
     </div>
   );
 }
