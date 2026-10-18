@@ -125,9 +125,52 @@ export default function FormationCounter() {
     },
   ];
 
+  const enemyPanel = (
+    <label className="flex w-full max-w-sm flex-col gap-1.5" htmlFor={selectId}>
+      <span className="text-sm font-medium text-red-700 dark:text-red-400">Opponent&apos;s formation</span>
+      <span className="relative block">
+        <select
+          id={selectId}
+          value={enemy}
+          onChange={(e) => setEnemy(e.target.value as Formation)}
+          className="h-12 w-full appearance-none rounded-lg border border-stone-300 bg-white pl-4 pr-10 text-base font-semibold text-stone-900 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:focus-visible:ring-offset-stone-950"
+        >
+          {FORMATIONS.map((f) => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
+        </select>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-stone-500"
+        >
+          <path
+            d="M5 8l5 5 5-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </label>
+  );
+
+  const allyPanel = (
+    <div className={`flex w-full max-w-sm flex-col gap-1.5 ${allyOnLeft ? "" : "items-end text-right"}`}>
+      <span className="text-sm font-medium text-blue-700 dark:text-blue-400">Your formation</span>
+      <span className="flex h-12 items-center text-3xl font-semibold tabular-nums text-blue-700 dark:text-blue-400">
+        {counter}
+      </span>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
+    <div className="flex flex-col gap-6 sm:gap-8">
+      <header className="flex flex-col gap-1 sm:gap-2">
         <p className="text-sm text-stone-600 dark:text-stone-400">
           8 a side formation counters
         </p>
@@ -138,66 +181,40 @@ export default function FormationCounter() {
         </h1>
       </header>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-        <label className="flex flex-1 flex-col gap-1.5" htmlFor={selectId}>
-          <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
-            Opponent&apos;s formation
-          </span>
-          <span className="relative block">
-            <select
-              id={selectId}
-              value={enemy}
-              onChange={(e) => setEnemy(e.target.value as Formation)}
-              className="h-12 w-full appearance-none rounded-lg border border-stone-300 bg-white pl-4 pr-10 text-base text-stone-900 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:focus-visible:ring-offset-stone-950"
-            >
-              {FORMATIONS.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 20 20"
-              className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-stone-500"
-            >
-              <path
-                d="M5 8l5 5 5-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </label>
+      <div className="flex w-full flex-col gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-6">
+          <div className="flex justify-start">
+            {allyOnLeft ? allyPanel : enemyPanel}
+          </div>
+          <button
+            type="button"
+            aria-pressed={!allyOnLeft}
+            onClick={() => setAllyOnLeft((v) => !v)}
+            className="order-1 col-span-2 h-12 rounded-lg border border-stone-300 bg-white px-5 text-base font-medium text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 active:bg-stone-200 sm:order-none sm:col-span-1 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950"
+          >
+            Swap sides
+          </button>
+          <div className="flex justify-end">
+            {allyOnLeft ? enemyPanel : allyPanel}
+          </div>
+        </div>
 
-        <button
-          type="button"
-          aria-pressed={!allyOnLeft}
-          onClick={() => setAllyOnLeft((v) => !v)}
-          className="h-12 rounded-lg border border-stone-300 bg-white px-5 text-base font-medium text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 active:bg-stone-200 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950"
-        >
-          Swap sides
-        </button>
+        <figure className="flex flex-col gap-3">
+          <Pitch ally={ally} foes={foes} allyOnLeft={allyOnLeft} enemy={enemy} counter={counter} />
+          <figcaption className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-stone-700 dark:text-stone-300">
+            <span className="inline-flex items-center gap-2">
+              <span className="size-3 rounded-full bg-blue-700 ring-2 ring-blue-200 dark:ring-blue-900" />
+              Your team in {counter}, attacking {allyOnLeft ? "right" : "left"}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="size-3 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
+              Opponent in {enemy}, attacking {allyOnLeft ? "left" : "right"}
+            </span>
+          </figcaption>
+        </figure>
       </div>
 
-      <figure className="flex flex-col gap-3">
-        <Pitch ally={ally} foes={foes} allyOnLeft={allyOnLeft} enemy={enemy} counter={counter} />
-        <figcaption className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-stone-700 dark:text-stone-300">
-          <span className="inline-flex items-center gap-2">
-            <span className="size-3 rounded-full bg-blue-700 ring-2 ring-blue-200 dark:ring-blue-900" />
-            Your team in {counter}, attacking {allyOnLeft ? "right" : "left"}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="size-3 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
-            Opponent in {enemy}, attacking {allyOnLeft ? "left" : "right"}
-          </span>
-        </figcaption>
-      </figure>
-
-      <section className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-10">
+      <section className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
         <dl className="flex flex-col divide-y divide-stone-200 dark:divide-stone-800">
           {matchups.map((m) => {
             const edge = m.ours > m.theirs ? "up" : m.ours < m.theirs ? "down" : "even";
@@ -223,7 +240,7 @@ export default function FormationCounter() {
           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
             Why {counter} works against {enemy}
           </h2>
-          <p className="max-w-prose text-base leading-7 text-stone-700 dark:text-stone-300">{why}</p>
+          <p className="max-w-[70ch] text-base leading-7 text-stone-700 lg:text-lg lg:leading-8 dark:text-stone-300">{why}</p>
         </div>
       </section>
     </div>
@@ -294,21 +311,28 @@ function Pitch({
           <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.35" />
         </filter>
       </defs>
-      <text
-        x={allyOnLeft ? 70 : W - 70}
-        y={H - 56}
-        textAnchor={allyOnLeft ? "start" : "end"}
-        fill={chalk}
-        fillOpacity={0.55}
-        fontSize={30}
-        fontWeight={600}
-        fontFamily="var(--font-geist-sans), system-ui, sans-serif"
-      >
-        {allyOnLeft ? "you \u2192" : "\u2190 you"}
-      </text>
+      <SideLabel left={allyOnLeft} text={`You ${counter}`} chalk={chalk} />
+      <SideLabel left={!allyOnLeft} text={`Opponent ${enemy}`} chalk={chalk} />
       <Team points={foes} fill="#dc2626" ring="#fecaca" />
       <Team points={ally} fill="#1d4ed8" ring="#bfdbfe" />
     </svg>
+  );
+}
+
+function SideLabel({ left, text, chalk }: { left: boolean; text: string; chalk: string }) {
+  return (
+    <text
+      x={left ? 70 : W - 70}
+      y={H - 58}
+      textAnchor={left ? "start" : "end"}
+      fill={chalk}
+      fillOpacity={0.6}
+      fontSize={30}
+      fontWeight={600}
+      fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+    >
+      {left ? `${text} \u2192` : `\u2190 ${text}`}
+    </text>
   );
 }
 
