@@ -2,9 +2,13 @@
 
 import { useId, useState } from "react";
 
-type Point = { x: number; y: number; label: string };
+type Zone = "keeper" | "defense" | "midfield" | "attack";
 
-type Counter = { counter: string; why: string };
+type Point = { x: number; y: number; label: string; zone: Zone };
+
+type Step = { text: string; ally: Zone[]; enemy: Zone[] };
+
+type Counter = { counter: string; why: string; steps: Step[] };
 
 const FORMATIONS = [
   "2-3-2",
@@ -30,30 +34,65 @@ const COUNTERS: Record<Formation, Counter> = {
   "2-3-2": {
     counter: "3-3-1",
     why: "Three defenders outnumber their two strikers, the midfield stays even at three apiece, and your lone forward keeps one of their two defenders busy so the other can't step up.",
+    steps: [
+      { text: "Three defenders outnumber their two strikers, so one defender is always free to cover.", ally: ["defense"], enemy: ["attack"] },
+      { text: "Midfield is even at three apiece, so you never lose the middle of the pitch.", ally: ["midfield"], enemy: ["midfield"] },
+      { text: "Your lone forward keeps one of their two defenders busy, so the other can't step up into midfield.", ally: ["attack"], enemy: ["defense"] },
+    ],
   },
   "3-3-1": {
     counter: "2-4-1",
     why: "Four midfielders against three wins the middle of the pitch, and their single striker is handled comfortably by two defenders.",
+    steps: [
+      { text: "Four midfielders against three win the middle of the pitch.", ally: ["midfield"], enemy: ["midfield"] },
+      { text: "Their single striker is handled comfortably by two defenders.", ally: ["defense"], enemy: ["attack"] },
+      { text: "Your forward pins their three defenders back and gives the midfield an outlet.", ally: ["attack"], enemy: ["defense"] },
+    ],
   },
   "3-2-2": {
     counter: "2-3-2",
     why: "Three midfielders against two gives you the ball. Two forwards sit on their back three so the defenders can't push into midfield to help.",
+    steps: [
+      { text: "Three midfielders against two give you control of the ball.", ally: ["midfield"], enemy: ["midfield"] },
+      { text: "Two forwards sit on their back three so the defenders can't push into midfield to help.", ally: ["attack"], enemy: ["defense"] },
+      { text: "Two defenders against two strikers is a fair fight, and a midfielder drops in whenever they attack.", ally: ["defense"], enemy: ["attack"] },
+    ],
   },
   "2-4-1": {
     counter: "2-3-2",
     why: "Skip the crowded midfield and play direct. Their two defenders are isolated against your two forwards, and their lone striker is doubled up by your two defenders.",
+    steps: [
+      { text: "Their four midfielders crowd the middle, so skip it and play direct.", ally: ["midfield"], enemy: ["midfield"] },
+      { text: "Their two defenders are isolated against your two forwards.", ally: ["attack"], enemy: ["defense"] },
+      { text: "Their lone striker is doubled up by your two defenders.", ally: ["defense"], enemy: ["attack"] },
+    ],
   },
   "3-1-3": {
     counter: "3-3-1",
     why: "Three defenders match their three forwards one for one, and your three midfielders swarm their single holding player whenever they try to build.",
+    steps: [
+      { text: "Three defenders match their three forwards one for one.", ally: ["defense"], enemy: ["attack"] },
+      { text: "Your three midfielders swarm their single holding player whenever they try to build.", ally: ["midfield"], enemy: ["midfield"] },
+      { text: "Your forward occupies their back three so they can't send extra numbers forward.", ally: ["attack"], enemy: ["defense"] },
+    ],
   },
   "2-1-3-1": {
     counter: "3-2-2",
     why: "Their two defenders sit alone behind four midfielders, so your two forwards go at them two on two. Three defenders absorb the striker and the runners arriving from midfield.",
+    steps: [
+      { text: "Their two defenders sit alone behind four midfielders, so your two forwards go at them two on two.", ally: ["attack"], enemy: ["defense"] },
+      { text: "Three defenders absorb the striker and the runners arriving from midfield.", ally: ["defense"], enemy: ["attack", "midfield"] },
+      { text: "Two central midfielders hold the middle and feed the forwards quickly.", ally: ["midfield"], enemy: ["midfield"] },
+    ],
   },
   "3-1-2-1": {
     counter: "2-4-1",
     why: "Four midfielders overload their three, and their lone striker gives your two defenders an easy afternoon.",
+    steps: [
+      { text: "Four midfielders overload their three.", ally: ["midfield"], enemy: ["midfield"] },
+      { text: "Their lone striker gives your two defenders an easy afternoon.", ally: ["defense"], enemy: ["attack"] },
+      { text: "Your forward keeps their three defenders occupied.", ally: ["attack"], enemy: ["defense"] },
+    ],
   },
 };
 
@@ -64,11 +103,13 @@ function lines(formation: string): number[] {
   return formation.split("-").map(Number);
 }
 
-function roleFor(index: number, total: number): string {
-  if (index === 0) return "DF";
-  if (index === total - 1) return "FW";
-  return "MF";
+function zoneFor(index: number, total: number): Zone {
+  if (index === 0) return "defense";
+  if (index === total - 1) return "attack";
+  return "midfield";
 }
+
+const ZONE_LABEL: Record<Zone, string> = { keeper: "GK", defense: "DF", midfield: "MF", attack: "FW" };
 
 /** Positions for a team defending the left goal and attacking to the right. */
 function placeLeft(formation: string): Point[] {
@@ -76,15 +117,12 @@ function placeLeft(formation: string): Point[] {
   const first = 150;
   const last = 460;
   const step = rows.length > 1 ? (last - first) / (rows.length - 1) : 0;
-  const points: Point[] = [{ x: 62, y: H / 2, label: "GK" }];
+  const points: Point[] = [{ x: 62, y: H / 2, label: "GK", zone: "keeper" }];
   rows.forEach((count, i) => {
     const x = first + step * i;
     for (let j = 0; j < count; j++) {
-      points.push({
-        x,
-        y: (H * (j + 1)) / (count + 1),
-        label: roleFor(i, rows.length),
-      });
+      const zone = zoneFor(i, rows.length);
+      points.push({ x, y: (H * (j + 1)) / (count + 1), label: ZONE_LABEL[zone], zone });
     }
   });
   return points;
@@ -103,9 +141,12 @@ export default function FormationCounter() {
   const [enemy, setEnemy] = useState<Formation>("2-3-2");
   const [allyOnLeft, setAllyOnLeft] = useState(true);
   const [size, setSize] = useState<FieldSize>("medium");
+  const [page, setPage] = useState(0);
   const selectId = useId();
 
-  const { counter, why } = COUNTERS[enemy];
+  const { counter, why, steps } = COUNTERS[enemy];
+  const pageCount = steps.length + 1;
+  const step = page === 0 ? null : steps[page - 1];
   const allyBase = placeLeft(counter);
   const enemyBase = placeLeft(enemy);
   const ally = allyOnLeft ? allyBase : rotate(allyBase);
@@ -115,18 +156,21 @@ export default function FormationCounter() {
   const enemyRows = lines(enemy);
   const matchups = [
     {
+      key: "defense" as Zone,
       zone: "Your defense",
       ours: allyRows[0],
       theirs: enemyRows[enemyRows.length - 1],
       note: "defenders against their forwards",
     },
     {
+      key: "midfield" as Zone,
       zone: "Midfield",
       ours: sum(allyRows.slice(1, -1)),
       theirs: sum(enemyRows.slice(1, -1)),
       note: "midfielders against theirs",
     },
     {
+      key: "attack" as Zone,
       zone: "Your attack",
       ours: allyRows[allyRows.length - 1],
       theirs: enemyRows[0],
@@ -141,7 +185,10 @@ export default function FormationCounter() {
         <select
           id={selectId}
           value={enemy}
-          onChange={(e) => setEnemy(e.target.value as Formation)}
+          onChange={(e) => {
+            setEnemy(e.target.value as Formation);
+            setPage(0);
+          }}
           className="h-12 w-full appearance-none rounded-lg border border-stone-300 bg-white pl-4 pr-10 text-base font-semibold text-stone-900 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:focus-visible:ring-offset-stone-950"
         >
           {FORMATIONS.map((f) => (
@@ -229,7 +276,7 @@ export default function FormationCounter() {
         </div>
 
         <figure className="flex flex-col gap-3">
-          <Pitch ally={ally} foes={foes} allyOnLeft={allyOnLeft} enemy={enemy} counter={counter} />
+          <Pitch ally={ally} foes={foes} allyOnLeft={allyOnLeft} enemy={enemy} counter={counter} step={step} />
           <figcaption className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-stone-700 dark:text-stone-300">
             <span className="inline-flex items-center gap-2">
               <span className="size-3 rounded-full bg-blue-700 ring-2 ring-blue-200 dark:ring-blue-900" />
@@ -248,7 +295,12 @@ export default function FormationCounter() {
           {matchups.map((m) => {
             const edge = m.ours > m.theirs ? "up" : m.ours < m.theirs ? "down" : "even";
             return (
-              <div key={m.zone} className="flex items-baseline justify-between gap-4 py-3">
+              <div
+                key={m.zone}
+                className={`flex items-baseline justify-between gap-4 px-2 py-3 transition-colors ${
+                  step && step.ally.includes(m.key) ? "rounded-md bg-yellow-100 dark:bg-yellow-950/60" : ""
+                }`}
+              >
                 <dt className="text-sm text-stone-700 dark:text-stone-300">
                   {m.zone}
                   <span className="block text-xs text-stone-500">{m.note}</span>
@@ -265,11 +317,55 @@ export default function FormationCounter() {
             );
           })}
         </dl>
-        <div className="flex flex-col gap-2">
+        <div className="order-first flex flex-col gap-3 sm:order-none">
           <h1 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
             Why {counter} works against {enemy}
           </h1>
-          <p className="max-w-[70ch] text-base leading-7 text-stone-700 lg:text-lg lg:leading-8 dark:text-stone-300">{why}</p>
+          <p
+            key={`${enemy}-${page}`}
+            aria-live="polite"
+            className="min-h-[5.5rem] max-w-[70ch] text-base leading-7 text-stone-700 lg:text-lg lg:leading-8 dark:text-stone-300"
+          >
+            {step ? step.text : why}
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              aria-label="Previous step"
+              className="flex size-11 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950 dark:disabled:hover:bg-stone-900"
+            >
+              <Chevron direction="left" />
+            </button>
+            <div className="flex items-center gap-2" role="tablist" aria-label="Steps">
+              {Array.from({ length: pageCount }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === page}
+                  aria-label={i === 0 ? "Overview" : `Step ${i} of ${steps.length}`}
+                  onClick={() => setPage(i)}
+                  className={`size-3 rounded-full transition-colors ${
+                    i === page ? "bg-stone-900 dark:bg-stone-100" : "bg-stone-300 hover:bg-stone-400 dark:bg-stone-700 dark:hover:bg-stone-600"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-sm tabular-nums text-stone-600 dark:text-stone-400">
+              {page === 0 ? "Overview" : `Step ${page} of ${steps.length}`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={page === pageCount - 1}
+              aria-label="Next step"
+              className="ml-auto flex size-11 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950 dark:disabled:hover:bg-stone-900"
+            >
+              <Chevron direction="right" />
+            </button>
+          </div>
         </div>
       </section>
     </div>
@@ -282,12 +378,14 @@ function Pitch({
   allyOnLeft,
   enemy,
   counter,
+  step,
 }: {
   ally: Point[];
   foes: Point[];
   allyOnLeft: boolean;
   enemy: Formation;
   counter: string;
+  step: Step | null;
 }) {
   const chalk = "#f3f5ee";
   const stripes = 10;
@@ -342,8 +440,16 @@ function Pitch({
       </defs>
       <SideLabel left={allyOnLeft} text={`You ${counter}`} chalk={chalk} />
       <SideLabel left={!allyOnLeft} text={`Opponent ${enemy}`} chalk={chalk} />
-      <Team points={foes} fill="#dc2626" ring="#fecaca" />
-      <Team points={ally} fill="#1d4ed8" ring="#bfdbfe" />
+      <Team points={foes} fill="#dc2626" ring="#fecaca" focus={step ? step.enemy : null} />
+      <Team points={ally} fill="#1d4ed8" ring="#bfdbfe" focus={step ? step.ally : null} />
+    </svg>
+  );
+}
+
+function Chevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d={direction === "left" ? "M12 5l-5 5 5 5" : "M8 5l5 5-5 5"} />
     </svg>
   );
 }
@@ -376,24 +482,43 @@ function SideLabel({ left, text, chalk }: { left: boolean; text: string; chalk: 
   );
 }
 
-function Team({ points, fill, ring }: { points: Point[]; fill: string; ring: string }) {
+function Team({
+  points,
+  fill,
+  ring,
+  focus,
+}: {
+  points: Point[];
+  fill: string;
+  ring: string;
+  focus: Zone[] | null;
+}) {
   return (
     <g filter="url(#marker-shadow)">
-      {points.map((p, i) => (
-        <g key={i} transform={`translate(${p.x} ${p.y})`}>
-          <circle r={38} fill={fill} stroke={ring} strokeWidth={5} />
-          <text
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="#fff"
-            fontSize={28}
-            fontWeight={700}
-            fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+      {points.map((p, i) => {
+        const lit = focus ? focus.includes(p.zone) : null;
+        return (
+          <g
+            key={i}
+            transform={`translate(${p.x} ${p.y})`}
+            opacity={lit === false ? 0.3 : 1}
+            style={{ transition: "opacity 300ms ease" }}
           >
-            {p.label}
-          </text>
-        </g>
-      ))}
+            {lit ? <circle r={52} fill="#fde047" fillOpacity={0.35} /> : null}
+            <circle r={38} fill={fill} stroke={lit ? "#fde047" : ring} strokeWidth={lit ? 7 : 5} />
+            <text
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="#fff"
+              fontSize={28}
+              fontWeight={700}
+              fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+            >
+              {p.label}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
