@@ -18,6 +18,14 @@ const FORMATIONS = [
 
 type Formation = (typeof FORMATIONS)[number];
 
+type FieldSize = "small" | "medium" | "large";
+
+const FIELD_SIZES: { value: FieldSize; label: string; width: string; icon: { w: number; h: number } }[] = [
+  { value: "small", label: "Small field", width: "sm:max-w-[40rem]", icon: { w: 10, h: 6.5 } },
+  { value: "medium", label: "Medium field", width: "sm:max-w-[56rem]", icon: { w: 15, h: 10 } },
+  { value: "large", label: "Large field", width: "sm:max-w-none", icon: { w: 20, h: 13 } },
+];
+
 const COUNTERS: Record<Formation, Counter> = {
   "2-3-2": {
     counter: "3-3-1",
@@ -94,6 +102,7 @@ function sum(values: number[]): number {
 export default function FormationCounter() {
   const [enemy, setEnemy] = useState<Formation>("2-3-2");
   const [allyOnLeft, setAllyOnLeft] = useState(true);
+  const [size, setSize] = useState<FieldSize>("medium");
   const selectId = useId();
 
   const { counter, why } = COUNTERS[enemy];
@@ -169,20 +178,51 @@ export default function FormationCounter() {
   );
 
   return (
-    <div className="mx-auto flex w-full flex-col gap-6 sm:max-w-[min(56rem,max(40rem,(100svh-11rem)*1.544))] sm:gap-8">
+    <div
+      className={`mx-auto flex w-full flex-col gap-6 sm:gap-8 ${FIELD_SIZES.find((f) => f.value === size)?.width ?? ""}`}
+    >
       <div className="flex w-full flex-col gap-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-6">
           <div className="flex justify-start">
             {allyOnLeft ? allyPanel : enemyPanel}
           </div>
-          <button
-            type="button"
-            aria-pressed={!allyOnLeft}
-            onClick={() => setAllyOnLeft((v) => !v)}
-            className="order-1 col-span-2 h-12 rounded-lg border border-stone-300 bg-white px-5 text-base font-medium text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 active:bg-stone-200 sm:order-none sm:col-span-1 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950"
-          >
-            Swap sides
-          </button>
+          <div className="order-1 col-span-2 flex items-center justify-center gap-3 sm:order-none sm:col-span-1">
+            <button
+              type="button"
+              aria-pressed={!allyOnLeft}
+              onClick={() => setAllyOnLeft((v) => !v)}
+              className="h-12 flex-1 rounded-lg border border-stone-300 bg-white px-5 text-base font-medium text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 active:bg-stone-200 sm:flex-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950"
+            >
+              Swap sides
+            </button>
+            <div
+              role="radiogroup"
+              aria-label="Field size"
+              className="hidden h-12 overflow-hidden rounded-lg border border-stone-300 bg-white shadow-sm sm:flex dark:border-stone-700 dark:bg-stone-900"
+            >
+              {FIELD_SIZES.map((f) => {
+                const active = f.value === size;
+                return (
+                  <button
+                    key={f.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    aria-label={f.label}
+                    title={f.label}
+                    onClick={() => setSize(f.value)}
+                    className={`flex w-12 items-center justify-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-stone-700 ${
+                      active
+                        ? "bg-stone-900 text-stone-50 dark:bg-stone-100 dark:text-stone-900"
+                        : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
+                    }`}
+                  >
+                    <FieldIcon w={f.icon.w} h={f.icon.h} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="flex justify-end">
             {allyOnLeft ? enemyPanel : allyPanel}
           </div>
@@ -304,6 +344,17 @@ function Pitch({
       <SideLabel left={!allyOnLeft} text={`Opponent ${enemy}`} chalk={chalk} />
       <Team points={foes} fill="#dc2626" ring="#fecaca" />
       <Team points={ally} fill="#1d4ed8" ring="#bfdbfe" />
+    </svg>
+  );
+}
+
+function FieldIcon({ w, h }: { w: number; h: number }) {
+  const x = (24 - w) / 2;
+  const y = (24 - h) / 2;
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75}>
+      <rect x={x} y={y} width={w} height={h} rx={0.75} />
+      <line x1={12} y1={y} x2={12} y2={y + h} />
     </svg>
   );
 }
