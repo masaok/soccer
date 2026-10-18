@@ -273,7 +273,7 @@ export default function FormationCounter() {
   const allyPanel = (
     <div className={`flex w-full max-w-sm flex-col gap-1.5 ${allyOnLeft ? "" : "items-end text-right"}`}>
       <span className="text-sm font-medium text-blue-700 dark:text-blue-400">Your formation</span>
-      <span className="flex h-12 items-center text-3xl font-semibold tabular-nums text-blue-700 dark:text-blue-400">
+      <span className="flex h-12 items-center text-2xl font-semibold tabular-nums text-blue-700 sm:text-3xl dark:text-blue-400">
         {counter}
       </span>
     </div>
@@ -281,22 +281,14 @@ export default function FormationCounter() {
 
   return (
     <div
-      className={`mx-auto grid w-full gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start ${FIELD_SIZES.find((f) => f.value === size)?.width ?? ""}`}
+      className={`mx-auto grid w-full gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start ${FIELD_SIZES.find((f) => f.value === size)?.width ?? ""}`}
     >
-      <div className="flex w-full min-w-0 flex-col gap-3">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-6">
+      <div className="flex w-full min-w-0 flex-col gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-6">
           <div className="flex justify-start">
             {allyOnLeft ? allyPanel : enemyPanel}
           </div>
-          <div className="order-1 col-span-2 flex items-center justify-center gap-3 sm:order-none sm:col-span-1">
-            <button
-              type="button"
-              aria-pressed={!allyOnLeft}
-              onClick={() => setAllyOnLeft((v) => !v)}
-              className="h-12 flex-1 rounded-lg border border-stone-300 bg-white px-5 text-base font-medium text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 active:bg-stone-200 sm:flex-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950"
-            >
-              Swap sides
-            </button>
+          <div className="hidden items-center justify-center gap-3 sm:flex">
             <div
               role="radiogroup"
               aria-label="Field size"
@@ -331,22 +323,32 @@ export default function FormationCounter() {
           </div>
         </div>
 
-        <figure className="flex flex-col gap-3">
+        <figure className="flex flex-col gap-2 sm:gap-3">
           <Pitch ally={ally} foes={foes} allyOnLeft={allyOnLeft} enemy={enemy} counter={counter} step={step} />
-          <figcaption className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-stone-700 dark:text-stone-300">
-            <span className="inline-flex items-center gap-2">
-              <span className="size-3 rounded-full bg-blue-700 ring-2 ring-blue-200 dark:ring-blue-900" />
-              Your team in {counter}, attacking {allyOnLeft ? "right" : "left"}
+          <figcaption className="flex items-center justify-between gap-3 text-sm text-stone-700 dark:text-stone-300">
+            <span className="flex flex-wrap gap-x-5 gap-y-1">
+              <span className="inline-flex items-center gap-2">
+                <span className="size-3 rounded-full bg-blue-700 ring-2 ring-blue-200 dark:ring-blue-900" />
+                You attack {allyOnLeft ? "right" : "left"}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="size-3 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
+                Opponent attacks {allyOnLeft ? "left" : "right"}
+              </span>
             </span>
-            <span className="inline-flex items-center gap-2">
-              <span className="size-3 rounded-full bg-red-600 ring-2 ring-red-200 dark:ring-red-950" />
-              Opponent in {enemy}, attacking {allyOnLeft ? "left" : "right"}
-            </span>
+            <button
+              type="button"
+              aria-pressed={!allyOnLeft}
+              onClick={() => setAllyOnLeft((v) => !v)}
+              className="h-9 shrink-0 rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 active:bg-stone-200 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950"
+            >
+              Swap sides
+            </button>
           </figcaption>
         </figure>
       </div>
 
-      <aside className="flex min-w-0 flex-col gap-6 sm:grid sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] sm:gap-10 lg:flex lg:flex-col lg:gap-6 lg:pt-1">
+      <aside className="flex min-w-0 flex-col gap-5 sm:grid sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] sm:gap-10 lg:flex lg:flex-col lg:gap-6 lg:pt-1">
         <div className="flex flex-col gap-3">
           <h1 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
             Why {counter} works against {enemy}
