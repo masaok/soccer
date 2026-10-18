@@ -202,11 +202,42 @@ export default function FormationCounter() {
     },
   ];
 
+  const goPrev = () => setPage((p) => Math.max(0, p - 1));
+  const goNext = () => setPage((p) => Math.min(pageCount - 1, p + 1));
+
+  const stepArrows = (
+    <div
+      className="flex h-12 overflow-hidden rounded-lg border border-stone-300 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900"
+      role="group"
+      aria-label="Steps"
+    >
+      <button
+        type="button"
+        onClick={goPrev}
+        disabled={page === 0}
+        aria-label="Previous step"
+        className="flex w-12 items-center justify-center text-stone-900 outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-stone-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-stone-50 dark:hover:bg-stone-800"
+      >
+        <Chevron direction="left" />
+      </button>
+      <span className="w-px bg-stone-300 dark:bg-stone-700" aria-hidden="true" />
+      <button
+        type="button"
+        onClick={goNext}
+        disabled={page === pageCount - 1}
+        aria-label="Next step"
+        className="flex w-12 items-center justify-center text-stone-900 outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-stone-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-stone-50 dark:hover:bg-stone-800"
+      >
+        <Chevron direction="right" />
+      </button>
+    </div>
+  );
+
   const enemyPanel = (
     <label className="flex w-full max-w-sm flex-col gap-1.5" htmlFor={selectId}>
-      <span className="text-sm font-medium text-red-700 dark:text-red-400">
+      <span className="whitespace-nowrap text-sm font-medium text-red-700 dark:text-red-400">
         Opponent&apos;s formation
-        <span className="hidden font-normal text-stone-400 sm:inline dark:text-stone-500"> (up and down keys)</span>
+        <span className="hidden font-normal text-stone-400 sm:inline dark:text-stone-500"> (up/down keys)</span>
       </span>
       <span className="relative block">
         <select
@@ -296,6 +327,7 @@ export default function FormationCounter() {
                 );
               })}
             </div>
+            {stepArrows}
           </div>
           <div className="flex justify-end">
             {allyOnLeft ? enemyPanel : allyPanel}
@@ -358,7 +390,7 @@ export default function FormationCounter() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              onClick={goPrev}
               disabled={page === 0}
               aria-label="Previous step"
               className="flex size-11 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950 dark:disabled:hover:bg-stone-900"
@@ -386,7 +418,7 @@ export default function FormationCounter() {
             </span>
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              onClick={goNext}
               disabled={page === pageCount - 1}
               aria-label="Next step"
               className="ml-auto flex size-11 items-center justify-center rounded-lg border border-stone-300 bg-white text-stone-900 shadow-sm outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-700 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50 dark:hover:bg-stone-800 dark:focus-visible:ring-offset-stone-950 dark:disabled:hover:bg-stone-900"
