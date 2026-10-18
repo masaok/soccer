@@ -10,14 +10,15 @@ type Step = { text: string; ally: Zone[]; enemy: Zone[] };
 
 type Counter = { counter: string; why: string; steps: Step[] };
 
+/** Ordered from most to least common in 8v8 play. */
 const FORMATIONS = [
-  "2-3-2",
-  "3-3-1",
   "3-2-2",
+  "3-3-1",
+  "2-3-2",
   "2-4-1",
-  "3-1-3",
   "2-1-3-1",
   "3-1-2-1",
+  "3-1-3",
 ] as const;
 
 type Formation = (typeof FORMATIONS)[number];
@@ -138,7 +139,7 @@ function sum(values: number[]): number {
 }
 
 export default function FormationCounter() {
-  const [enemy, setEnemy] = useState<Formation>("2-3-2");
+  const [enemy, setEnemy] = useState<Formation>(FORMATIONS[0]);
   const [allyOnLeft, setAllyOnLeft] = useState(true);
   const [size, setSize] = useState<FieldSize>("medium");
   const [page, setPage] = useState(0);
