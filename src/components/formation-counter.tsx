@@ -149,12 +149,23 @@ export default function FormationCounter() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const horizontal = e.key === "ArrowLeft" || e.key === "ArrowRight";
+      const vertical = e.key === "ArrowUp" || e.key === "ArrowDown";
+      if (!horizontal && !vertical) return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
       const target = e.target as HTMLElement | null;
       if (target && target.closest("select, input, textarea, [contenteditable='true']")) return;
       e.preventDefault();
-      setPage((p) => (e.key === "ArrowLeft" ? Math.max(0, p - 1) : Math.min(pageCount - 1, p + 1)));
+      if (horizontal) {
+        setPage((p) => (e.key === "ArrowLeft" ? Math.max(0, p - 1) : Math.min(pageCount - 1, p + 1)));
+        return;
+      }
+      setEnemy((current) => {
+        const i = FORMATIONS.indexOf(current);
+        const next = e.key === "ArrowUp" ? Math.max(0, i - 1) : Math.min(FORMATIONS.length - 1, i + 1);
+        return FORMATIONS[next];
+      });
+      setPage(0);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -193,7 +204,10 @@ export default function FormationCounter() {
 
   const enemyPanel = (
     <label className="flex w-full max-w-sm flex-col gap-1.5" htmlFor={selectId}>
-      <span className="text-sm font-medium text-red-700 dark:text-red-400">Opponent&apos;s formation</span>
+      <span className="text-sm font-medium text-red-700 dark:text-red-400">
+        Opponent&apos;s formation
+        <span className="hidden font-normal text-stone-400 sm:inline dark:text-stone-500"> (up and down keys)</span>
+      </span>
       <span className="relative block">
         <select
           id={selectId}
