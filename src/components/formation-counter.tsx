@@ -170,17 +170,6 @@ export default function FormationCounter() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
-      <header className="flex flex-col gap-1 sm:gap-2">
-        <p className="text-sm text-stone-600 dark:text-stone-400">
-          8 a side formation counters
-        </p>
-        <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight text-stone-900 sm:text-5xl dark:text-stone-50">
-          They line up in {enemy}.
-          <br />
-          Answer with {counter}.
-        </h1>
-      </header>
-
       <div className="flex w-full flex-col gap-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-6">
           <div className="flex justify-start">
@@ -237,9 +226,9 @@ export default function FormationCounter() {
           })}
         </dl>
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
+          <h1 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
             Why {counter} works against {enemy}
-          </h2>
+          </h1>
           <p className="max-w-[70ch] text-base leading-7 text-stone-700 lg:text-lg lg:leading-8 dark:text-stone-300">{why}</p>
         </div>
       </section>
