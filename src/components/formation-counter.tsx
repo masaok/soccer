@@ -169,7 +169,7 @@ export default function FormationCounter() {
   );
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8">
+    <div className="mx-auto flex w-full flex-col gap-6 sm:max-w-[min(56rem,max(40rem,(100svh-11rem)*1.544))] sm:gap-8">
       <div className="flex w-full flex-col gap-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-6">
           <div className="flex justify-start">
