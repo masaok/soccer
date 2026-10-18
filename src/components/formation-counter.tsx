@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 type Zone = "keeper" | "defense" | "midfield" | "attack";
 
@@ -146,6 +146,19 @@ export default function FormationCounter() {
 
   const { counter, why, steps } = COUNTERS[enemy];
   const pageCount = steps.length + 1;
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest("select, input, textarea, [contenteditable='true']")) return;
+      e.preventDefault();
+      setPage((p) => (e.key === "ArrowLeft" ? Math.max(0, p - 1) : Math.min(pageCount - 1, p + 1)));
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [pageCount]);
   const step = page === 0 ? null : steps[page - 1];
   const allyBase = placeLeft(counter);
   const enemyBase = placeLeft(enemy);
@@ -355,6 +368,7 @@ export default function FormationCounter() {
             </div>
             <span className="text-sm tabular-nums text-stone-600 dark:text-stone-400">
               {page === 0 ? "Overview" : `Step ${page} of ${steps.length}`}
+              <span className="hidden text-stone-400 sm:inline dark:text-stone-500"> (arrow keys)</span>
             </span>
             <button
               type="button"
